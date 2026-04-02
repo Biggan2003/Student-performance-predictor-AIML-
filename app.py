@@ -3,6 +3,12 @@ from flask_cors import CORS
 import pickle
 import numpy as np
 
+import numpy as np
+import numpy._core as core
+
+with open('student_model.pkl', 'rb') as f:
+    model = pickle.load(f)
+    
 app = Flask(__name__)
 CORS(app)  # সব জায়গা থেকে API কল করার অনুমতি
 
