@@ -1,26 +1,36 @@
+import os
+import warnings
+warnings.filterwarnings('ignore')
+
+# numpy এর পুরনো ভার্সন ব্যবহার করতে বাধ্য করুন
+os.environ['NUMPY_EXPERIMENTAL_ARRAY_FUNCTION'] = '0'
+
+import numpy as np
+import pickle
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pickle
-import numpy as np
 
-import numpy as np
-import numpy._core as core
-
-with open('student_model.pkl', 'rb') as f:
-    model = pickle.load(f)
-    
 app = Flask(__name__)
-CORS(app)  # সব জায়গা থেকে API কল করার অনুমতি
+CORS(app)
 
-# মডেল লোড করুন
-with open('student_model.pkl', 'rb') as f:
-    model = pickle.load(f)
+# মডেল লোড করার আগে numpy চেক করুন
+print(f"NumPy version: {np.__version__}")
+
+try:
+    with open('student_model.pkl', 'rb') as f:
+        model = pickle.load(f)
+    print("✅ মডেল সফলভাবে লোড হয়েছে")
+except Exception as e:
+    print(f"❌ মডেল লোড করতে সমস্যা: {e}")
+    model = None
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    if model is None:
+        return jsonify({'success': False, 'error': 'Model not loaded'})
+    
     try:
         data = request.get_json()
-        
         final_exam = float(data.get('final_exam', 0))
         midterm = float(data.get('midterm', 0))
         assignment = float(data.get('assignment', 0))
