@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .grade {
+            font-size: 36px;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        
+        .grade-A { background: #d4edda; color: #155724; }
+        .grade-B { background: #d1ecf1; color: #0c5460; }
+        .grade-C { background: #fff3cd; color: #856404; }
+        .grade-D { background: #f8d7da; color: #721c24; }
+        .grade-F { background: #f8d7da; color: #721c24; }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Student Performance Predictor</h1>
+        <div class="subtitle">Predict overall score based on exam results</div>
+        
+        <div class="input-group">
+            <label>📝 Final Exam Score (0-100)</label>
+            <input type="number" id="finalExam" min="0" max="100" value="70" step="any">
+        </div>
+        
+        <div class="input-group">
+            <label>📚 Midterm Score (0-100)</label>
+            <input type="number" id="midterm" min="0" max="100" value="70" step="any">
+        </div>
+        
+        <div class="input-group">
+            <label>✏️ Assignment Score (0-100)</label>
+            <input type="number" id="assignment" min="0" max="100" value="70" step="any">
+        </div>
+        
+        <button onclick="predictScore()">🎯 Predict Overall Score</button>
+        
+        <div id="result" class="result">
+            <h3>Predicted Overall Score</h3>
+            <div class="score" id="score">--</div>
+            <div class="grade" id="grade">--</div>
+        </div>
+    </div>
+
+    <script>
+        // আপনার Render.com API লিংক দিন (নিচে পরিবর্তন করুন)
+        const API_URL = 'https://student-performance-api.onrender.com/predict';
+        
+        async function predictScore() {
+            const finalExam = parseFloat(document.getElementById('finalExam').value);
+            const midterm = parseFloat(document.getElementById('midterm').value);
+            const assignment = parseFloat(document.getElementById('assignment').value);
+            
+            const button = document.querySelector('button');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<div class="loading"></div> Predicting...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        final_exam: finalExam,
+                        midterm: midterm,
+                        assignment: assignment
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('score').innerHTML = data.predicted_score;
+                    document.getElementById('grade').innerHTML = `Grade: ${data.grade}`;
+                    document.getElementById('grade').className = `grade grade-${data.grade}`;
+                    document.getElementById('result').classList.add('show');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('API connection failed! Make sure your API is running.\nError: ' + error.message);
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
